@@ -261,6 +261,9 @@ Never Do:
 ❌ Copy-paste code instead of abstracting
 ❌ Leave commented-out code in production
 ❌ Skip input validation on user data
+❌ write tests without being asked
+
+
 Communication Protocol
 When Uncertain
 Ask clarifying questions before generating code
