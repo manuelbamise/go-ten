@@ -26,10 +26,10 @@ Go-Ten is a terminal-based project initializer built with the Bubble Tea framewo
 
 ```bash
 # Run the interactive CLI
-go run ./cmd/go-ten
+go run ./cmd/
 
 # Build for production
-go build -o go-ten ./cmd/go-ten
+go build -o go-ten ./cmd/
 ./go-ten
 ```
 
@@ -38,8 +38,7 @@ go build -o go-ten ./cmd/go-ten
 ```
 .
 ├── cmd/
-│   └── go-ten/
-│       └── main.go          # Application entry point
+│   └── main.go          # Application entry point
 ├── internal/
 │   └── prompts/
 │       ├── prompts.go       # Bubble tea model and UI logic
@@ -49,9 +48,6 @@ go build -o go-ten ./cmd/go-ten
 └── README.md                # This file
 ```
 
-## Development
-
-See [AGENTS.md](./AGENTS.md) for detailed development guidelines, build commands, and code style requirements.
 
 ## Requirements
 
