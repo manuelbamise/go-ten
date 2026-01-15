@@ -65,7 +65,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
-	s := "Just testing the TUI"
+	s := "Just testing the TUI\n"
 
 	for i, choice := range m.choices {
 		// Is the cursor pointing at this choice?
