@@ -1,7 +1,7 @@
 # Build artifacts
-ten
-ten-*
-ten.exe
+go-ten
+go-ten-*
+go-ten.exe
 
 # IDE files
 .vscode/
@@ -17,3 +17,6 @@ Thumbs.db
 vendor/
 *.test
 *.prof
+
+# Agents
+AGENTS.md
