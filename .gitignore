@@ -1,1 +1,19 @@
-AGENTS.md
+# Build artifacts
+ten
+ten-*
+ten.exe
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Go specific
+vendor/
+*.test
+*.prof
