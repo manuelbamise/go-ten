@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/manuelbamise/go-ten/internal/commands"
 )
 
 // Stage represents the current stage in the multi-step flow
@@ -153,6 +154,15 @@ func (m Model) updateStage3(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch msg.String() {
 	// Confirm and create project
 	case "enter":
+		// Show project creation message
+		m.renderProjectCreation()
+
+		// Execute project configuration commands
+		if err := commands.EchoProjectConfig(m.selectedProjectType, m.getSelectedFeatures()); err != nil {
+			// Handle command execution error
+			fmt.Printf("\nError executing project commands: %v\n", err)
+		}
+
 		m.quitting = true
 		return m, tea.Quit
 	}
@@ -256,6 +266,25 @@ func (m Model) renderStage3() string {
 
 	s += "\nPress Enter to create project or 'q' to quit"
 	return s
+}
+
+// renderProjectCreation shows the project creation message and executes commands
+func (m Model) renderProjectCreation() {
+	fmt.Println("\nCreating project with configuration:")
+	fmt.Printf("Type: %s\n", m.selectedProjectType)
+
+	selectedFeatures := m.getSelectedFeatures()
+	if len(selectedFeatures) > 0 {
+		fmt.Println("Features:")
+		for _, feature := range selectedFeatures {
+			fmt.Printf("  - %s\n", feature)
+		}
+	} else {
+		fmt.Println("Features: (none)")
+	}
+
+	// Add a separator before shell output
+	fmt.Println("\n[Shell Output]")
 }
 
 // GetConfiguration returns the complete project configuration
