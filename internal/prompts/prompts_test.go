@@ -7,280 +7,130 @@ import (
 )
 
 func TestNewModel(t *testing.T) {
-	m := NewModel()
+	model := NewModel()
 
-	// Test initial stage
-	if m.currentStage != Stage1ProjectType {
-		t.Errorf("Expected initial stage to be Stage1ProjectType, got %v", m.currentStage)
+	if model.currentStage != Stage1ProjectName {
+		t.Errorf("Expected stage %d, got %d", Stage1ProjectName, model.currentStage)
 	}
 
-	// Test project types initialization
-	expectedProjectTypes := []string{"Web API", "CLI Tool", "gRPC Service", "Microservice"}
-	if len(m.projectTypes) != len(expectedProjectTypes) {
-		t.Errorf("Expected %d project types, got %d", len(expectedProjectTypes), len(m.projectTypes))
+	if len(model.appTypes) == 0 {
+		t.Error("appTypes should not be empty")
 	}
 
-	for i, projectType := range m.projectTypes {
-		if projectType != expectedProjectTypes[i] {
-			t.Errorf("Expected project type %s at index %d, got %s", expectedProjectTypes[i], i, projectType)
+	if len(model.packages) == 0 {
+		t.Error("packages should not be empty")
+	}
+}
+
+func TestValidateProjectName(t *testing.T) {
+	model := NewModel()
+
+	// Test valid names
+	validNames := []string{"my-project", "my_project", "myproject", "my-project-123", "."}
+	for _, name := range validNames {
+		err := model.validateProjectName(name)
+		if err != nil {
+			t.Errorf("Valid name %s failed validation: %v", name, err)
 		}
 	}
 
-	// Test features initialization
-	expectedFeatures := []string{
-		"Docker support",
-		"GitHub Actions CI/CD",
-		"PostgreSQL integration",
-		"Authentication (JWT)",
-		"Logging (structured)",
-	}
-	if len(m.availableFeatures) != len(expectedFeatures) {
-		t.Errorf("Expected %d available features, got %d", len(expectedFeatures), len(m.availableFeatures))
-	}
-
-	// Test that all features are initially unselected
-	for _, feature := range expectedFeatures {
-		if m.selectedFeatures[feature] {
-			t.Errorf("Expected feature %s to be unselected initially", feature)
+	// Test invalid names
+	invalidNames := []string{"", "my project", "my@project", "my#project", "my/project"}
+	for _, name := range invalidNames {
+		err := model.validateProjectName(name)
+		if err == nil {
+			t.Errorf("Invalid name %s should have failed validation", name)
 		}
 	}
+}
 
-	// Test initial cursor positions
-	if m.projectTypeCursor != 0 {
-		t.Errorf("Expected project type cursor to be 0, got %d", m.projectTypeCursor)
+func TestGetTargetDir(t *testing.T) {
+	model := NewModel()
+
+	// Test with regular project name
+	model.projectName = "test-project"
+	targetDir := model.getTargetDir()
+	expected := "./test-project/"
+	if targetDir != expected {
+		t.Errorf("Expected %s, got %s", expected, targetDir)
 	}
 
-	if m.featureCursor != 0 {
-		t.Errorf("Expected feature cursor to be 0, got %d", m.featureCursor)
-	}
-
-	// Test initial state
-	if m.selectedProjectType != "" {
-		t.Errorf("Expected selected project type to be empty, got %s", m.selectedProjectType)
-	}
-
-	if m.quitting {
-		t.Error("Expected quitting to be false initially")
+	// Test with current directory
+	model.projectName = "."
+	targetDir = model.getTargetDir()
+	expected = "./"
+	if targetDir != expected {
+		t.Errorf("Expected %s, got %s", expected, targetDir)
 	}
 }
 
-func TestModelUpdateStage1Navigation(t *testing.T) {
-	m := NewModel()
+func TestGenerationSuccess(t *testing.T) {
+	model := NewModel()
 
-	// Test down arrow in stage 1
-	newModel, _ := m.Update(tea.KeyMsg{Type: tea.KeyDown})
-	if newModel.(Model).projectTypeCursor != 1 {
-		t.Errorf("Expected project type cursor to be 1 after down arrow, got %d", newModel.(Model).projectTypeCursor)
+	// Initially should be false
+	if model.GenerationSuccess() {
+		t.Error("GenerationSuccess should initially be false")
 	}
 
-	// Test up arrow in stage 1
-	m = newModel.(Model)
-	newModel, _ = m.Update(tea.KeyMsg{Type: tea.KeyUp})
-	if newModel.(Model).projectTypeCursor != 0 {
-		t.Errorf("Expected project type cursor to be 0 after up arrow, got %d", newModel.(Model).projectTypeCursor)
-	}
-
-	// Test that we can't go below 0
-	newModel, _ = m.Update(tea.KeyMsg{Type: tea.KeyUp})
-	if newModel.(Model).projectTypeCursor != 0 {
-		t.Errorf("Expected project type cursor to remain 0 when trying to go up from 0, got %d", newModel.(Model).projectTypeCursor)
-	}
-
-	// Test that we can't go above max
-	m.projectTypeCursor = len(m.projectTypes) - 1
-	newModel, _ = m.Update(tea.KeyMsg{Type: tea.KeyDown})
-	if newModel.(Model).projectTypeCursor != len(m.projectTypes)-1 {
-		t.Errorf("Expected project type cursor to remain at max when trying to go down from max, got %d", newModel.(Model).projectTypeCursor)
+	// Set to true
+	model.generationSuccess = true
+	if !model.GenerationSuccess() {
+		t.Error("GenerationSuccess should be true when set")
 	}
 }
 
-func TestModelUpdateStage1Transition(t *testing.T) {
-	m := NewModel()
+func TestUpdateStage1ProjectName(t *testing.T) {
+	model := NewModel()
 
-	// Test enter key advances to stage 2
-	newModel, _ := m.Update(tea.KeyMsg{Type: tea.KeyEnter})
-	selectedModel := newModel.(Model)
+	// Test character input
+	msg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'t', 'e', 's', 't'}}
+	updatedModel, _ := model.updateStage1(msg)
 
-	if selectedModel.currentStage != Stage2Features {
-		t.Errorf("Expected stage to advance to Stage2Features, got %v", selectedModel.currentStage)
+	if updatedModel.(Model).inputValue != "test" {
+		t.Errorf("Expected input value 'test', got '%s'", updatedModel.(Model).inputValue)
 	}
 
-	if selectedModel.selectedProjectType != "Web API" {
-		t.Errorf("Expected selected project type to be 'Web API', got %s", selectedModel.selectedProjectType)
-	}
-}
+	// Test backspace
+	msg = tea.KeyMsg{Type: tea.KeyBackspace}
+	updatedModel, _ = updatedModel.(Model).updateStage1(msg)
 
-func TestModelUpdateStage2Navigation(t *testing.T) {
-	m := NewModel()
-	// Advance to stage 2
-	m.currentStage = Stage2Features
-
-	// Test down arrow in stage 2
-	newModel, _ := m.Update(tea.KeyMsg{Type: tea.KeyDown})
-	if newModel.(Model).featureCursor != 1 {
-		t.Errorf("Expected feature cursor to be 1 after down arrow, got %d", newModel.(Model).featureCursor)
-	}
-
-	// Test up arrow in stage 2
-	m = newModel.(Model)
-	newModel, _ = m.Update(tea.KeyMsg{Type: tea.KeyUp})
-	if newModel.(Model).featureCursor != 0 {
-		t.Errorf("Expected feature cursor to be 0 after up arrow, got %d", newModel.(Model).featureCursor)
+	if updatedModel.(Model).inputValue != "tes" {
+		t.Errorf("Expected input value 'tes', got '%s'", updatedModel.(Model).inputValue)
 	}
 }
 
-func TestModelUpdateStage2FeatureToggle(t *testing.T) {
-	m := NewModel()
-	// Advance to stage 2
-	m.currentStage = Stage2Features
+func TestUpdateStage2AppType(t *testing.T) {
+	model := NewModel()
+	model.currentStage = Stage2AppType
 
-	// Test spacebar toggles feature
-	feature := m.availableFeatures[0]
-	if m.selectedFeatures[feature] {
-		t.Errorf("Expected feature %s to be unselected initially", feature)
+	// Test Enter key
+	msg := tea.KeyMsg{Type: tea.KeyEnter}
+	updatedModel, _ := model.Update(msg)
+
+	um := updatedModel.(Model)
+	if um.currentStage != Stage3Package {
+		t.Errorf("Expected stage %d, got %d", Stage3Package, um.currentStage)
 	}
 
-	// Toggle to selected
-	newModel, _ := m.Update(tea.KeyMsg{Type: tea.KeySpace})
-	selectedModel := newModel.(Model)
-	if !selectedModel.selectedFeatures[feature] {
-		t.Errorf("Expected feature %s to be selected after spacebar, got %v", feature, selectedModel.selectedFeatures[feature])
-	}
-
-	// Toggle back to unselected
-	newModel, _ = selectedModel.Update(tea.KeyMsg{Type: tea.KeySpace})
-	selectedModel = newModel.(Model)
-	if selectedModel.selectedFeatures[feature] {
-		t.Errorf("Expected feature %s to be unselected after second spacebar, got %v", feature, selectedModel.selectedFeatures[feature])
+	if um.selectedAppType == "" {
+		t.Error("selectedAppType should not be empty")
 	}
 }
 
-func TestModelUpdateStage2Transition(t *testing.T) {
-	m := NewModel()
-	// Advance to stage 2
-	m.currentStage = Stage2Features
+func TestUpdateStage3Package(t *testing.T) {
+	model := NewModel()
+	model.currentStage = Stage3Package
 
-	// Test enter key advances to stage 3
-	newModel, _ := m.Update(tea.KeyMsg{Type: tea.KeyEnter})
-	selectedModel := newModel.(Model)
+	// Test Enter key
+	msg := tea.KeyMsg{Type: tea.KeyEnter}
+	updatedModel, _ := model.Update(msg)
 
-	if selectedModel.currentStage != Stage3Summary {
-		t.Errorf("Expected stage to advance to Stage3Summary, got %v", selectedModel.currentStage)
-	}
-}
-
-func TestModelUpdateStage3Confirmation(t *testing.T) {
-	m := NewModel()
-	// Advance to stage 3
-	m.currentStage = Stage3Summary
-	m.selectedProjectType = "Web API"
-
-	// Test enter key quits
-	newModel, cmd := m.Update(tea.KeyMsg{Type: tea.KeyEnter})
-	selectedModel := newModel.(Model)
-
-	if !selectedModel.quitting {
-		t.Error("Expected quitting to be true after enter in stage 3")
+	um := updatedModel.(Model)
+	if um.currentStage != Stage4Summary {
+		t.Errorf("Expected stage %d, got %d", Stage4Summary, um.currentStage)
 	}
 
-	if cmd == nil {
-		t.Error("Expected tea.Quit command, got nil")
-	}
-}
-
-func TestModelUpdateQuit(t *testing.T) {
-	m := NewModel()
-
-	// Test quit with 'q' in any stage
-	newModel, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'q'}})
-
-	selectedModel := newModel.(Model)
-	if !selectedModel.quitting {
-		t.Error("Expected quitting to be true")
-	}
-
-	if cmd == nil {
-		t.Error("Expected tea.Quit command, got nil")
-	}
-}
-
-func TestModelView(t *testing.T) {
-	m := NewModel()
-
-	// Test stage 1 view
-	view := m.View()
-	if view == "" {
-		t.Error("Expected non-empty view for stage 1")
-	}
-
-	// Test stage 2 view
-	m.currentStage = Stage2Features
-	view = m.View()
-	if view == "" {
-		t.Error("Expected non-empty view for stage 2")
-	}
-
-	// Test stage 3 view
-	m.currentStage = Stage3Summary
-	m.selectedProjectType = "Web API"
-	view = m.View()
-	if view == "" {
-		t.Error("Expected non-empty view for stage 3")
-	}
-}
-
-func TestGetConfiguration(t *testing.T) {
-	m := NewModel()
-
-	// Initially empty configuration
-	config := m.GetConfiguration()
-	if config.ProjectType != "" {
-		t.Errorf("Expected empty project type, got %s", config.ProjectType)
-	}
-
-	if len(config.Features) != 0 {
-		t.Errorf("Expected no features, got %v", config.Features)
-	}
-
-	// After selection
-	m.selectedProjectType = "CLI Tool"
-	m.selectedFeatures["Docker support"] = true
-	m.selectedFeatures["Authentication (JWT)"] = true
-
-	config = m.GetConfiguration()
-	if config.ProjectType != "CLI Tool" {
-		t.Errorf("Expected project type 'CLI Tool', got %s", config.ProjectType)
-	}
-
-	expectedFeatures := []string{"Docker support", "Authentication (JWT)"}
-	if len(config.Features) != len(expectedFeatures) {
-		t.Errorf("Expected %d features, got %d", len(expectedFeatures), len(config.Features))
-	}
-}
-
-func TestGetSelectedFeatures(t *testing.T) {
-	m := NewModel()
-
-	// Initially no features selected
-	features := m.getSelectedFeatures()
-	if len(features) != 0 {
-		t.Errorf("Expected no selected features, got %v", features)
-	}
-
-	// Select some features
-	m.selectedFeatures["Docker support"] = true
-	m.selectedFeatures["Authentication (JWT)"] = true
-
-	features = m.getSelectedFeatures()
-	if len(features) != 2 {
-		t.Errorf("Expected 2 selected features, got %d", len(features))
-	}
-
-	// Check that the correct features are selected
-	expectedFeatures := []string{"Docker support", "Authentication (JWT)"}
-	for i, feature := range features {
-		if feature != expectedFeatures[i] {
-			t.Errorf("Expected feature %s at index %d, got %s", expectedFeatures[i], i, feature)
-		}
+	if um.selectedPackage == "" {
+		t.Error("selectedPackage should not be empty")
 	}
 }
