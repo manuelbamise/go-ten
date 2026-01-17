@@ -136,7 +136,7 @@ func TestExecuteEcho(t *testing.T) {
 			r, w, _ := os.Pipe()
 			os.Stdout = w
 
-			err := ExecuteEcho(tt.text)
+			err := executeEcho(tt.text)
 
 			// Restore stdout and get captured output
 			w.Close()
@@ -265,7 +265,7 @@ func TestCrossPlatformCommand(t *testing.T) {
 		r, w, _ := os.Pipe()
 		os.Stdout = w
 
-		err := ExecuteEcho(text)
+		err := executeEcho(text)
 
 		// Restore stdout and get captured output
 		w.Close()

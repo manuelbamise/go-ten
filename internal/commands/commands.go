@@ -11,7 +11,7 @@ import (
 // It uses os/exec with separate arguments to prevent shell injection vulnerabilities
 // The function captures command output and prints it to stdout
 // Returns an error if the command fails
-func ExecuteEcho(text string) error {
+func executeEcho(text string) error {
 	// Input validation to prevent shell injection and invalid inputs
 	if err := validateInput(text); err != nil {
 		return fmt.Errorf("invalid input: %w", err)
@@ -49,7 +49,7 @@ func EchoProjectConfig(projectType string, features []string) error {
 	}
 
 	// Echo project type
-	if err := ExecuteEcho(projectType); err != nil {
+	if err := executeEcho(projectType); err != nil {
 		return fmt.Errorf("failed to echo project type: %w", err)
 	}
 
@@ -60,7 +60,7 @@ func EchoProjectConfig(projectType string, features []string) error {
 			return fmt.Errorf("invalid feature input '%s': %w", feature, err)
 		}
 
-		if err := ExecuteEcho(feature); err != nil {
+		if err := executeEcho(feature); err != nil {
 			return fmt.Errorf("failed to echo feature '%s': %w", feature, err)
 		}
 	}

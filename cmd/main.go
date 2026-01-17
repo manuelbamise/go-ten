@@ -29,7 +29,7 @@ func main() {
 	// Get the complete configuration
 	config := m.GetConfiguration()
 
-	// Check if user made a selection (project type will be empty if they quit)
+	// Check if user made a selection
 	if config.ProjectType != "" {
 		// Display the final configuration in structured format
 		fmt.Println("Project Configuration:")
