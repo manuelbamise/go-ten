@@ -1,0 +1,21 @@
+package handlers
+
+import (
+    "net/http"
+    "time"
+    "{{.ModuleName}}/utils"
+)
+
+func HealthHandler(w http.ResponseWriter, r *http.Request) {
+    if r.Method != http.MethodGet {
+        utils.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "Method not allowed"})
+        return
+    }
+
+    response := map[string]interface{}{
+        "status":    "healthy",
+        "timestamp": time.Now().UTC().Format(time.RFC3339),
+    }
+
+    utils.WriteJSON(w, utils.StatusOK, response)
+}

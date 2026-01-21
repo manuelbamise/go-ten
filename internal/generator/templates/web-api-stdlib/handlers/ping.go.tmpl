@@ -1,0 +1,16 @@
+package handlers
+
+import (
+    "net/http"
+    "{{.ModuleName}}/utils"
+)
+
+func PingHandler(w http.ResponseWriter, r *http.Request) {
+    if r.Method != http.MethodGet {
+        utils.WriteJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "Method not allowed"})
+        return
+    }
+
+    response := map[string]string{"message": "pong"}
+    utils.WriteJSON(w, utils.StatusOK, response)
+}

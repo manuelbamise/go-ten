@@ -1,0 +1,10 @@
+package middleware
+
+import "net/http"
+
+func ApplyMiddleware(handler http.Handler) http.Handler {
+    handler = Logging(handler)
+    handler = CORS(handler)
+    handler = Recovery(handler)
+    return handler
+}

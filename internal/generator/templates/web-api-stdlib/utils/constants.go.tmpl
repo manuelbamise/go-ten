@@ -1,0 +1,20 @@
+package utils
+
+import (
+    "net/http"
+    "time"
+)
+
+const (
+    DefaultPort        = "8080"
+    ServerReadTimeout  = 15 * time.Second
+    ServerWriteTimeout = 15 * time.Second
+    ServerIdleTimeout  = 60 * time.Second
+    ShutdownTimeout    = 30 * time.Second
+)
+
+const (
+    StatusOK            = http.StatusOK
+    StatusNotFound      = http.StatusNotFound
+    StatusInternalError = http.StatusInternalServerError
+)
