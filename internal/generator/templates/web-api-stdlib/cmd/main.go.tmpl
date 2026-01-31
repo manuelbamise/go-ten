@@ -27,18 +27,7 @@ func main() {
     mux.HandleFunc("/health", handlers.HealthHandler)
     mux.HandleFunc("/api/v1/ping", handlers.PingHandler)
 
-    // Create not found handler
-    notFoundMux := http.NotFoundHandler()
-    mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-        // Check if the path matches any registered route
-        if r.URL.Path != "/health" && r.URL.Path != "/api/v1/ping" {
-            handlers.NotFoundHandler(w, r)
-            return
-        }
-        // If it's a registered route but method doesn't match, let the default handler handle it
-        notFoundMux.ServeHTTP(w, r)
-    })
-
+    
     // Apply middleware chain
     handler := middleware.ApplyMiddleware(mux)
 
